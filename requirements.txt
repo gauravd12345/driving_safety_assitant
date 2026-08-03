@@ -1,0 +1,13 @@
+torch
+torchvision
+torchaudio
+ultralytics
+transformers
+accelerate
+pillow
+opencv-python
+sentencepiece
+safetensors
+fastapi
+uvicorn[standard]
+python-multipart

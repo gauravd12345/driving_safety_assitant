@@ -3,6 +3,23 @@
 
 An AI-powered driving safety assistant that analyzes dashcam footage using computer vision and large language models to detect potential driving incidents and generate natural-language safety reports.
 
+It ships with a web app: upload a video and watch the detections stream into a live "terminal" beside the player, then read the AI's final safety verdict.
+
+## Run the web app
+
+```bash
+source .venv/bin/activate
+python server.py
+```
+
+Then open http://127.0.0.1:8000 in your browser, drop in a video, and click **Analyze video**.
+
+- **Left panel:** your uploaded video.
+- **Right panel:** a live terminal streaming per-second object detections (via WebSocket).
+- **Bottom:** the AI safety verdict once processing finishes.
+
+The original CLI version still works too: `python main.py` (it analyzes `test.mp4` and prints to the terminal).
+
 ## Setup
 
 ### 1. Create a virtual environment

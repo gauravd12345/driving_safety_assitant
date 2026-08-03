@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Driving Safety Assistant</title>
+<style>
+  :root {
+    --bg: #0b0f1a;
+    --panel: #121826;
+    --panel-2: #0e1420;
+    --border: #222c40;
+    --text: #e6ebf5;
+    --muted: #8b97ad;
+    --accent: #4f8cff;
+    --accent-2: #22d3ee;
+    --term-bg: #05070d;
+    --term-green: #43e57b;
+    --danger: #ff5d6c;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(79,140,255,0.15), transparent),
+      radial-gradient(900px 500px at -10% 110%, rgba(34,211,238,0.12), transparent),
+      var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  header {
+    padding: 22px 32px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(6px);
+  }
+
+  .logo {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: grid; place-items: center;
+    font-size: 20px;
+    box-shadow: 0 6px 20px rgba(79,140,255,0.35);
+  }
+
+  header h1 { font-size: 18px; margin: 0; letter-spacing: 0.2px; }
+  header p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+
+  .wrap {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 26px 32px 48px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px;
+  }
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+
+  .panel {
+    background: linear-gradient(180deg, var(--panel), var(--panel-2));
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 460px;
+  }
+
+  .panel-head {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+  }
+
+  .dots { display: flex; gap: 7px; }
+  .dots span { width: 11px; height: 11px; border-radius: 50%; }
+  .dots .r { background: #ff5f56; }
+  .dots .y { background: #ffbd2e; }
+  .dots .g { background: #27c93f; }
+
+  .panel-body { padding: 18px; flex: 1; display: flex; flex-direction: column; }
+
+  /* ---- Video side ---- */
+  .dropzone {
+    flex: 1;
+    border: 2px dashed var(--border);
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    color: var(--muted);
+    padding: 30px;
+  }
+  .dropzone:hover, .dropzone.drag {
+    border-color: var(--accent);
+    background: rgba(79,140,255,0.06);
+  }
+  .dropzone .big { font-size: 40px; }
+  .dropzone b { color: var(--text); }
+
+  video {
+    width: 100%;
+    border-radius: 12px;
+    background: #000;
+    max-height: 360px;
+  }
+
+  .video-meta { margin-top: 12px; font-size: 13px; color: var(--muted); word-break: break-all; }
+
+  .btn {
+    margin-top: 14px;
+    border: none;
+    padding: 12px 18px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: transform .05s, opacity .2s;
+  }
+  .btn:hover { transform: translateY(-1px); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+  .btn.secondary { background: transparent; border: 1px solid var(--border); color: var(--text); }
+
+  /* ---- Terminal side ---- */
+  .term-panel .panel-body { padding: 0; }
+  .terminal {
+    flex: 1 1 0;
+    min-height: 0;
+    height: 440px;
+    background: var(--term-bg);
+    font-family: "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.55;
+    padding: 16px 18px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .terminal .line { color: var(--term-green); }
+  .terminal .sys { color: var(--accent-2); }
+  .terminal .err { color: var(--danger); }
+  .terminal .muted { color: var(--muted); }
+
+  .cursor {
+    display: inline-block;
+    width: 8px; height: 15px;
+    background: var(--term-green);
+    animation: blink 1s steps(2) infinite;
+    vertical-align: text-bottom;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .progress-wrap {
+    height: 4px; background: var(--border); border-radius: 4px; overflow: hidden;
+    margin: 0 18px 14px;
+  }
+  .progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .3s; }
+
+  /* ---- Verdict ---- */
+  .verdict {
+    margin-top: 22px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: linear-gradient(180deg, rgba(79,140,255,0.10), rgba(34,211,238,0.04));
+    padding: 22px 24px;
+    display: none;
+  }
+  .verdict.show { display: block; animation: rise .4s ease; }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } }
+  .verdict h2 { margin: 0 0 6px; font-size: 16px; display: flex; align-items: center; gap: 10px; }
+  .verdict .badge {
+    font-size: 11px; text-transform: uppercase; letter-spacing: .5px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    padding: 4px 10px; border-radius: 999px; color: white;
+  }
+  .verdict p { margin: 10px 0 0; color: var(--text); line-height: 1.65; white-space: pre-wrap; }
+
+  .status-pill {
+    font-size: 11px; padding: 4px 10px; border-radius: 999px;
+    border: 1px solid var(--border); color: var(--muted);
+  }
+  .status-pill.live { color: var(--term-green); border-color: rgba(67,229,123,0.4); }
+</style>
+</head>
+<body>
+  <header>
+    <div class="logo">🚗</div>
+    <div>
+      <h1>Driving Safety Assistant</h1>
+      <p>Upload dashcam footage · YOLOv8 detection · AI safety verdict</p>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <div class="grid">
+      <!-- LEFT: Video -->
+      <div class="panel">
+        <div class="panel-head">
+          <span>Footage</span>
+          <div class="dots"><span class="r"></span><span class="y"></span><span class="g"></span></div>
+        </div>
+        <div class="panel-body">
+          <div id="dropzone" class="dropzone">
+            <div class="big">⬆️</div>
+            <div><b>Drop a video here</b> or click to browse</div>
+            <div style="font-size:12px">MP4, MOV, AVI…</div>
+          </div>
+          <video id="player" controls style="display:none"></video>
+          <div id="videoMeta" class="video-meta"></div>
+          <input id="fileInput" type="file" accept="video/*" hidden />
+          <button id="analyzeBtn" class="btn" disabled>Analyze video</button>
+        </div>
+      </div>
+
+      <!-- RIGHT: Terminal -->
+      <div class="panel term-panel">
+        <div class="panel-head">
+          <span>Processing</span>
+          <span id="statusPill" class="status-pill">idle</span>
+        </div>
+        <div class="panel-body">
+          <div id="terminal" class="terminal"><span class="muted">$ waiting for a video…</span>
+</div>
+          <div class="progress-wrap"><div id="progressBar" class="progress-bar"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Verdict -->
+    <div id="verdict" class="verdict">
+      <h2><span class="badge">AI Verdict</span> Safety Report</h2>
+      <p id="verdictText"></p>
+    </div>
+  </div>
+
+<script>
+  const dropzone   = document.getElementById("dropzone");
+  const fileInput  = document.getElementById("fileInput");
+  const player     = document.getElementById("player");
+  const videoMeta  = document.getElementById("videoMeta");
+  const analyzeBtn = document.getElementById("analyzeBtn");
+  const terminal   = document.getElementById("terminal");
+  const progressBar= document.getElementById("progressBar");
+  const statusPill = document.getElementById("statusPill");
+  const verdict    = document.getElementById("verdict");
+  const verdictText= document.getElementById("verdictText");
+
+  let selectedFile = null;
+  let verdictRaw = "";
+  let uploadedName = null;
+  let ws = null;
+
+  // ---- file selection ----
+  dropzone.addEventListener("click", () => fileInput.click());
+  fileInput.addEventListener("change", (e) => handleFile(e.target.files[0]));
+
+  ["dragover", "dragenter"].forEach(ev =>
+    dropzone.addEventListener(ev, (e) => { e.preventDefault(); dropzone.classList.add("drag"); })
+  );
+  ["dragleave", "drop"].forEach(ev =>
+    dropzone.addEventListener(ev, (e) => { e.preventDefault(); dropzone.classList.remove("drag"); })
+  );
+  dropzone.addEventListener("drop", (e) => {
+    if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+  });
+
+  function handleFile(file) {
+    if (!file) return;
+    selectedFile = file;
+    uploadedName = null;
+    const url = URL.createObjectURL(file);
+    player.src = url;
+    player.style.display = "block";
+    dropzone.style.display = "none";
+    videoMeta.textContent = `${file.name} · ${(file.size / (1024*1024)).toFixed(1)} MB`;
+    analyzeBtn.disabled = false;
+    analyzeBtn.textContent = "Analyze video";
+    resetTerminal();
+    verdict.classList.remove("show");
+  }
+
+  // ---- terminal helpers ----
+  const cursor = () => {
+    const c = document.createElement("span");
+    c.className = "cursor";
+    return c;
+  };
+
+  function resetTerminal() {
+    terminal.innerHTML = "";
+    write("$ ready — click “Analyze video”.", "muted");
+    progressBar.style.width = "0%";
+    setStatus("idle", false);
+  }
+
+  function write(text, cls = "line") {
+    const existing = terminal.querySelector(".cursor");
+    if (existing) existing.remove();
+    const div = document.createElement("div");
+    div.className = cls;
+    div.textContent = text;
+    terminal.appendChild(div);
+    terminal.appendChild(cursor());
+    terminal.scrollTop = terminal.scrollHeight;
+  }
+
+  function setStatus(text, live) {
+    statusPill.textContent = text;
+    statusPill.classList.toggle("live", !!live);
+  }
+
+  // ---- analyze ----
+  analyzeBtn.addEventListener("click", async () => {
+    if (!selectedFile) return;
+    analyzeBtn.disabled = true;
+    analyzeBtn.textContent = "Analyzing…";
+    verdict.classList.remove("show");
+    terminal.innerHTML = "";
+    progressBar.style.width = "0%";
+    setStatus("uploading", true);
+    write("$ uploading video…", "sys");
+
+    try {
+      if (!uploadedName) {
+        const fd = new FormData();
+        fd.append("file", selectedFile);
+        const res = await fetch("/upload", { method: "POST", body: fd });
+        const data = await res.json();
+        uploadedName = data.job_id;
+      }
+      write("$ upload complete. starting analysis…", "sys");
+      openSocket(uploadedName);
+    } catch (err) {
+      write("Upload failed: " + err, "err");
+      setStatus("error", false);
+      analyzeBtn.disabled = false;
+      analyzeBtn.textContent = "Analyze video";
+    }
+  });
+
+  function openSocket(name) {
+    const proto = location.protocol === "https:" ? "wss" : "ws";
+    ws = new WebSocket(`${proto}://${location.host}/ws/${name}`);
+    setStatus("processing", true);
+
+    ws.onmessage = (event) => {
+      const msg = JSON.parse(event.data);
+      if (msg.type === "log") {
+        write(msg.text, "line");
+        if (typeof msg.progress === "number") {
+          progressBar.style.width = (msg.progress * 100).toFixed(1) + "%";
+        }
+      } else if (msg.type === "verdict_start") {
+        verdictText.textContent = "";
+        verdict.classList.add("show");
+        verdict.scrollIntoView({ behavior: "smooth", block: "center" });
+        write("$ AI is writing the report…", "sys");
+      } else if (msg.type === "verdict_chunk") {
+        verdictText.textContent += msg.text;
+        verdict.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      } else if (msg.type === "verdict") {
+        // backward-compatible: full verdict in one message
+        verdictText.textContent = msg.text;
+        verdict.classList.add("show");
+        verdict.scrollIntoView({ behavior: "smooth", block: "center" });
+      } else if (msg.type === "error") {
+        write(msg.text, "err");
+        setStatus("error", false);
+      } else if (msg.type === "done") {
+        write("$ done.", "sys");
+        progressBar.style.width = "100%";
+        setStatus("complete", false);
+        analyzeBtn.disabled = false;
+        analyzeBtn.textContent = "Re-analyze";
+      }
+    };
+
+    ws.onerror = () => { write("Connection error.", "err"); setStatus("error", false); };
+    ws.onclose = () => {
+      analyzeBtn.disabled = false;
+      if (analyzeBtn.textContent === "Analyzing…") analyzeBtn.textContent = "Analyze video";
+    };
+  }
+</script>
+</body>
+</html>

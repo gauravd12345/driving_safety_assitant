@@ -220,3 +220,6 @@ __marimo__/
 
 yolov8n.pt
 test.mp4
+
+# Uploaded videos from the web app
+uploads/
